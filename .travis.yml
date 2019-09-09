@@ -12,27 +12,26 @@
 #                                                                                 #
 ###################################################################################
 sudo: false
+dist: xenial
+d:
+  - dmd
+  - dmd-2.075.0
+  - ldc
 
-os:
-  - linux
-  - osx
+branches:
+  only:
+  - master  
 
-language: cpp
+install:
+  - sudo apt-get install python3-pip python3-setuptools
+  - python3 .ci/install.py
 
-services:
-  - docker
-
-before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then python3 .ci/install.py; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then docker pull squidfarts/ubontu:ci-image; fi
+before_script:
+  export PATH=$PATH:$PWD/.ntmp
 
 script:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then echo FROM squidfarts/ubontu:ci-image > Dockerfile; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then echo ADD . /root >> Dockerfile; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then docker build -t withgit .; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then docker run withgit /bin/sh -c "cd /root && TRAVIS=true python3 .ci/build.py && python3 .ci/test.py"; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then SDKROOT=$(xcodebuild -version -sdk macosx Path) python3 .ci/build.py && python3 .ci/test.py; fi
-  - gcov src/main/main.cc
+  # note: for dlang project tester, which doesn't clone automatically
+  - python3 .ci/build.py && python3 .ci/test.py
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
