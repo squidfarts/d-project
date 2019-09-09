@@ -1,0 +1,38 @@
+###################################################################################
+#                                                                                 #
+# NAME: .travis.yml                                                               #
+#                                                                                 #
+# AUTHOR: Michael Brockus.                                                        #
+#                                                                                 #
+# CONTACT: <mailto:michael@squidfarts.com>                                        #
+#                                                                                 #
+# NOTICES:                                                                        #
+#                                                                                 #
+# License: Apache 2.0 :http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                                                 #
+###################################################################################
+sudo: false
+
+os:
+  - linux
+  - osx
+
+language: cpp
+
+services:
+  - docker
+
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then python3 .ci/install.py; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then docker pull squidfarts/ubontu:ci-image; fi
+
+script:
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then echo FROM squidfarts/ubontu:ci-image > Dockerfile; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then echo ADD . /root >> Dockerfile; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then docker build -t withgit .; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then docker run withgit /bin/sh -c "cd /root && TRAVIS=true python3 .ci/build.py && python3 .ci/test.py"; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then SDKROOT=$(xcodebuild -version -sdk macosx Path) python3 .ci/build.py && python3 .ci/test.py; fi
+  - gcov src/main/main.cc
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)

@@ -1,0 +1,8 @@
+{
+    "mesonbuild.buildFolder": "build_dir",
+    "mesonbuild.configureOnOpen": true,
+    "mesonbuild.configureOptions": [
+        "--buildtype=debugoptimized",
+        "--layout=flat"
+    ]
+}
